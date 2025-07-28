@@ -26,7 +26,7 @@ jobs:
     
     - name: Run pytest
       run: |
-        cd src && python -m pytest ../tests/ -v --tb=short
+        pytest tests/ -v
     
     - name: Upload test results
       if: always()
@@ -58,16 +58,26 @@ jobs:
       run: mkdir -p models
     
     - name: Train model
-      run: cd src && python train.py
+      run: python3 src/train.py
     
     - name: Perform quantization
-      run: cd src && python quantize.py
+      run: python3 src/quantize.py
+    
+    - name: Verify model files exist
+      run: |
+        if [ ! -d "models" ] || [ -z "$(ls -A models)" ]; then
+          ls -la
+          ls -la src/
+          exit 1
+        fi
+        ls -la models/
     
     - name: Upload model artifacts
       uses: actions/upload-artifact@v4
       with:
         name: trained-models
         path: models/
+        if-no-files-found: error
 
   build_and_test_container:
     runs-on: ubuntu-latest

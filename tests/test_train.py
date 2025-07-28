@@ -73,7 +73,7 @@ class TestTrainingPipeline:
         assert os.path.exists('models/model.joblib'), "Model file should be saved"
         assert os.path.exists('models/test_data.joblib'), "Test data should be saved"
         
-        print("✓ Model training test passed")
+        print("Model training test passed")
     
     def test_r2_score_threshold(self):
         """Ensure R² score exceeds minimum threshold."""
@@ -91,7 +91,7 @@ class TestTrainingPipeline:
         
         assert r2_score > min_threshold, f"R² score {r2_score:.4f} should be above {min_threshold}"
         
-        print(f"✓ R² threshold test passed (Score: {r2_score:.4f})")
+        print(f"R² threshold test passed (Score: {r2_score:.4f})")
     
     def test_model_file_persistence(self):
         """Test if model file can be saved and loaded correctly."""
@@ -109,7 +109,7 @@ class TestTrainingPipeline:
         assert hasattr(loaded_model, 'coef_'), "Loaded model should have coefficients"
         assert hasattr(loaded_model, 'intercept_'), "Loaded model should have intercept"
         
-        print("✓ Model file persistence test passed")
+        print("Model file persistence test passed")
 
 
 if __name__ == "__main__":

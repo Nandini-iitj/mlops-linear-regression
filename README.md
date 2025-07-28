@@ -12,7 +12,7 @@ conda activate mlops
 pip3 install -r requirements.txt
 
 # Run pipeline
-cd src
+
 python3 src/train.py      # Train model
 python3 src/quantize.py   # Quantize model  
 python3 src/predict.py    # Run predictions
