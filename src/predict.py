@@ -38,7 +38,11 @@ def run_predictions():
     print(f"\n--- Model Information ---")
     print(f"Number of features: {len(model.coef_)}")
     print(f"Model intercept: {model.intercept_:.6f}")
-    print(f"First 5 coefficients: {model.coef_[:5]}")
+    print(f"\n--- All Model Coefficients ---")
+    print("Feature | Coefficient")
+    print("--------|------------")
+    for i, coef in enumerate(model.coef_, 1):
+        print(f"   {i:2d}   | {coef:12.6f}")
     
     print("\nPrediction verification completed successfully!")
     return predictions, r2_score

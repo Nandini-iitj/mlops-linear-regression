@@ -133,8 +133,38 @@ Sample 10: Actual=4.466, Predicted=3.916
 --- Model Information ---
 Number of features: 8
 Model intercept: -37.023278
-First 5 coefficients: [ 4.48674910e-01  9.72425752e-03 -1.23323343e-01  7.83144907e-01
- -2.02962058e-06]
+--- Model Performance ---
+R² Score on test set: 0.5758
+Total test samples: 4128
+
+--- Sample Outputs (first 10) ---
+Actual vs Predicted:
+Sample  1: Actual=0.477, Predicted=0.719
+Sample  2: Actual=0.458, Predicted=1.764
+Sample  3: Actual=5.000, Predicted=2.710
+Sample  4: Actual=2.186, Predicted=2.839
+Sample  5: Actual=2.780, Predicted=2.605
+Sample  6: Actual=1.587, Predicted=2.012
+Sample  7: Actual=1.982, Predicted=2.646
+Sample  8: Actual=1.575, Predicted=2.169
+Sample  9: Actual=3.400, Predicted=2.741
+Sample 10: Actual=4.466, Predicted=3.916
+
+--- Model Information ---
+Number of features: 8
+Model intercept: -37.023278
+
+--- All Model Coefficients ---
+Feature | Coefficient
+--------|------------
+    1   |     0.448675
+    2   |     0.009724
+    3   |    -0.123323
+    4   |     0.783145
+    5   |    -0.000002
+    6   |    -0.003526
+    7   |    -0.419792
+    8   |    -0.433708
 
 
 ## Features
