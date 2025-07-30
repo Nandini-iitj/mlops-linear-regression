@@ -47,28 +47,28 @@ docker run --rm mlops-lr
 
 ## Pipeline Components
 
-### Training (`src/train.py`)
+### Training (src/train.py)
 - Loads California Housing dataset from scikit-learn
 - Trains LinearRegression model with cross-validation
 - Evaluates performance using R² score and MSE
 - Persists trained model using joblib serialization
-- **Key Insight**: Achieves 61.26% variance explanation on training data
+- Achieves 61.26% variance explanation on training data
 
-### Testing (`tests/test_train.py`)
-- **Dataset Validation**: Ensures proper data loading and preprocessing
-- **Model Architecture**: Validates LinearRegression instantiation
-- **Training Verification**: Confirms model coefficients are learned
-- **Performance Gate**: Enforces R² score > 0.5 quality threshold
-- **Regression Analysis**: Tests prediction capability on holdout data
+### Testing (tests/test_train.py)
+- Dataset Validation: Ensures proper data loading and preprocessing
+- Model Architecture: Validates LinearRegression instantiation
+- Training Verification: Confirms model coefficients are learned
+- Performance Gate: Enforces R² score > 0.5 quality threshold
+- Regression Analysis: Tests prediction capability on holdout data
 
-### Quantization (`src/quantize.py`)
-- **Parameter Extraction**: Isolates model coefficients and intercept
-- **Backup Creation**: Saves original float32 parameters
-- **8-bit Conversion**: Implements manual quantization to uint8
-- **Validation**: Tests inference accuracy with dequantized weights
-- **Memory Optimization**: Reduces model footprint by 71%
+### Quantization (src/quantize.py)
+- Parameter Extraction: Isolates model coefficients and intercept
+- Backup Creation: Saves original float32 parameters
+- 8-bit Conversion: Implements manual quantization to uint8
+- Validation: Tests inference accuracy with dequantized weights
+- Intercept quantized along with coefficients
 
-### Prediction (`src/predict.py`)
+### Prediction (src/predict.py)
 - Loads production-ready trained model
 - Executes batch inference on test dataset
 - Provides detailed prediction vs actual analysis
@@ -78,76 +78,112 @@ docker run --rm mlops-lr
 
 The containerized solution:
 - Installs all Python dependencies automatically
-- Runs `predict.py` by default for immediate results
+- Runs predict.py by default for immediate results
 - Passes CI/CD integration tests
 - Enables consistent deployment across environments
 
 ## CI/CD Pipeline
 
-**Three-stage automated workflow:**
+Three-stage automated workflow:
 
-1. **`test_suite`**: Executes comprehensive pytest suite (quality gate)
-2. **`train_and_quantize`**: Trains model and applies quantization
-3. **`build_and_test_container`**: Builds Docker image and validates deployment
+1. test_suite: Executes comprehensive pytest suite (quality gate)
+2. train_and_quantize: Trains model and applies quantization
+3. build_and_test_container: Builds Docker image and validates deployment
 
-*Each stage must pass before proceeding to the next, ensuring production readiness.*
+Each stage must pass before proceeding to the next, ensuring production readiness.
 
 ## Performance Analysis
 
 ### Model Performance
-| Dataset | R² Score | MSE Loss | Interpretation |
-|---------|----------|----------|----------------|
-| Training | 0.6126 | 0.5179 | Good fit, explains 61% variance |
-| Testing | 0.5758 | 0.5559 | Minimal overfitting, generalizes well |
+| Dataset | R² Score | MSE Loss |
+|---------|----------|----------|
+| Training | 0.6126 | 0.5179 |
+| Testing | 0.5758 | 0.5559 |
+
+Dataset Split: 16,512 training samples, 4,128 test samples (80/20 split)
 
 ### Quantization Impact Analysis
-| Metric | Original (float32) | Quantized (uint8) | Improvement |
-|--------|-------------------|-------------------|-------------|
-| **Model Size** | 2.1 KB | 0.6 KB | **71% reduction** |
-| **Memory Usage** | Baseline | 4x less | **75% savings** |
-| **R² Accuracy** | 0.5758 | 0.5758 | **<0.01% loss** |
-| **Precision** | 32-bit | 8-bit | **4x compression** |
-
-**Key Insight**: Quantization achieves significant resource savings with negligible accuracy loss, making it ideal for edge deployment.
+| Metric | Value |
+|--------|-------|
+| Average Coefficient Error | 0.00033096 |
+| Intercept Error | 0.00145382 |
+| Coefficient Storage | uint8 |
+| Intercept Storage | uint8 |
 
 ## Sample Predictions Analysis
 
 ```
 --- Sample Outputs (first 10) ---
-Sample 1: Actual=0.477, Predicted=0.719  | Error: +50.7%
-Sample 2: Actual=0.458, Predicted=1.764  | Error: +285.2%
-Sample 3: Actual=5.000, Predicted=2.710  | Error: -45.8%
-Sample 4: Actual=2.186, Predicted=2.839  | Error: +29.9%
-Sample 5: Actual=2.780, Predicted=2.605  | Error: -6.3%
+Actual vs Predicted:
+Sample  1: Actual=0.477, Predicted=0.719
+Sample  2: Actual=0.458, Predicted=1.764
+Sample  3: Actual=5.000, Predicted=2.710
+Sample  4: Actual=2.186, Predicted=2.839
+Sample  5: Actual=2.780, Predicted=2.605
+Sample  6: Actual=1.587, Predicted=2.012
+Sample  7: Actual=1.982, Predicted=2.646
+Sample  8: Actual=1.575, Predicted=2.169
+Sample  9: Actual=3.400, Predicted=2.741
+Sample 10: Actual=4.466, Predicted=3.916
 ```
-
-**Observation**: Model shows typical linear regression behavior with some outlier predictions, particularly on low-value housing samples.
 
 ## Model Architecture
 
 ```
 Linear Regression Coefficients:
-Feature 1 (MedInc):      +0.4487  | Strong positive correlation
-Feature 2 (HouseAge):    +0.0097  | Minimal impact
-Feature 3 (AveRooms):    -0.1233  | Negative correlation
-Feature 4 (AveBedrms):   +0.7831  | Highest positive impact
-Feature 5 (Population):  -0.0000  | Negligible effect
-Feature 6 (AveOccup):    -0.0035  | Slight negative impact
-Feature 7 (Latitude):    -0.4198  | Geographic influence
-Feature 8 (Longitude):   -0.4337  | Geographic influence
+Feature | Coefficient
+--------|------------
+    1   |     0.448675
+    2   |     0.009724
+    3   |    -0.123323
+    4   |     0.783145
+    5   |    -0.000002
+    6   |    -0.003526
+    7   |    -0.419792
+    8   |    -0.433708
 
-Intercept: -37.0233
+Model Intercept: -37.023278
+Total Features: 8
+```
+
+### Quantization Analysis
+```
+Quantization Performance Metrics:
+- Coefficient Range: [-0.433708, 0.783145]
+- Intercept Range: [-37.393510, -36.653045]
+- Average Coefficient Error: 0.00033096
+- Intercept Error: 0.00145382
+
+Sample Quantization Impact:
+Original=0.7191 → Dequantized=1.4977 | Diff: 0.778571
+Original=1.7640 → Dequantized=2.6391 | Diff: 0.875065  
+Original=2.7097 → Dequantized=3.4567 | Diff: 0.747047
 ```
 
 ## Key Features
 
-- **Linear Regression**: Scikit-learn implementation with California Housing dataset
-- **Performance Monitoring**: R² score tracking and MSE evaluation
-- **Manual Quantization**: Manual 8-bit compression algorithm
-- **Quality Assurance**: Unit tests with performance thresholds
-- **Containerization**: Docker-ready deployment
-- **CI/CD Integration**: Automated 3-stage pipeline
-- **Clean Architecture**: All code in organized directories
+- Linear Regression: Scikit-learn implementation with California Housing dataset
+- Performance Monitoring: R² score tracking and MSE evaluation
+- Manual Quantization: Custom 8-bit compression algorithm
+- Quality Assurance: Unit tests with performance thresholds
+- Containerization: Docker-ready deployment
+- CI/CD Integration: Automated 3-stage pipeline
+- Clean Architecture: Organized codebase with separation of concerns
 
+## Use Cases
 
+This pipeline is ideal for:
+- Educational MLOps: Learning end-to-end ML pipeline development
+- Model Compression: Understanding quantization techniques
+- CI/CD Learning: Implementing automated ML workflows
+- Edge Deployment: Lightweight model deployment scenarios
+- Regression Analysis: Housing price prediction and similar domains
 
+## Future Enhancements
+
+- Add model versioning with MLflow
+- Implement A/B testing framework
+- Add monitoring and alerting
+- Support for other regression algorithms
+- Advanced quantization techniques (dynamic quantization)
+- Model explainability with SHAP values
