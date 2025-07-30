@@ -102,13 +102,38 @@ Each stage must pass before proceeding to the next, ensuring production readines
 
 Dataset Split: 16,512 training samples, 4,128 test samples (80/20 split)
 
-### Quantization Impact Analysis
+### Quantization Performance Metrics
+
+#### Storage Efficiency
+| Metric | Value |
+|--------|-------|
+| Original Model Size | 72 bytes |
+| Quantized Model Size | 9 bytes |
+| Size Reduction | 87.5% |
+| Compression Ratio | 8.0:1 |
+
+#### Quantization Accuracy
 | Metric | Value |
 |--------|-------|
 | Average Coefficient Error | 0.00033096 |
 | Intercept Error | 0.00145382 |
 | Coefficient Storage | uint8 |
 | Intercept Storage | uint8 |
+
+#### Model Performance Impact
+| Metric | Original | Quantized | Degradation |
+|--------|----------|-----------|-------------|
+| R² Score | 0.5758 | -0.1817 | 0.7575 (131.6%) |
+| MSE | 0.5559 | 1.5485 | 0.9926 (178.6%) |
+
+#### Inference Speed Analysis
+| Metric | Value |
+|--------|-------|
+| Original Inference Time | 0.0957 ms/sample |
+| Quantized Inference Time | 0.0083 ms/sample |
+| Speed Improvement | 91.3% |
+
+**Performance Note**: While quantization achieves significant storage reduction (87.5%) and inference speed improvement (91.3%), it causes substantial accuracy degradation. The R² score drops from 0.5758 to -0.1817, indicating the quantized model performs worse than a simple mean baseline. This suggests the current 8-bit quantization approach may be too aggressive for this linear regression model.
 
 ## Sample Predictions Analysis
 
@@ -125,6 +150,14 @@ Sample  7: Actual=1.982, Predicted=2.646
 Sample  8: Actual=1.575, Predicted=2.169
 Sample  9: Actual=3.400, Predicted=2.741
 Sample 10: Actual=4.466, Predicted=3.916
+```
+
+### Quantization Impact on Predictions
+```
+Prediction comparison (first 3 samples):
+Sample 1: Original=0.7191, Dequantized=1.4977, Diff=0.778571
+Sample 2: Original=1.7640, Dequantized=2.6391, Diff=0.875065
+Sample 3: Original=2.7097, Dequantized=3.4567, Diff=0.747047
 ```
 
 ## Model Architecture
@@ -146,44 +179,29 @@ Model Intercept: -37.023278
 Total Features: 8
 ```
 
-### Quantization Analysis
+### Quantization Range Analysis
 ```
-Quantization Performance Metrics:
-- Coefficient Range: [-0.433708, 0.783145]
-- Intercept Range: [-37.393510, -36.653045]
-- Average Coefficient Error: 0.00033096
-- Intercept Error: 0.00145382
-
-Sample Quantization Impact:
-Original=0.7191 → Dequantized=1.4977 | Diff: 0.778571
-Original=1.7640 → Dequantized=2.6391 | Diff: 0.875065  
-Original=2.7097 → Dequantized=3.4567 | Diff: 0.747047
+Coefficient Range: [-0.433708, 0.783145]
+Intercept Range: [-37.393510, -36.653045]
 ```
 
 ## Key Features
 
 - Linear Regression: Scikit-learn implementation with California Housing dataset
 - Performance Monitoring: R² score tracking and MSE evaluation
-- Manual Quantization: Custom 8-bit compression algorithm
+- Manual Quantization: Custom 8-bit compression algorithm with detailed metrics
 - Quality Assurance: Unit tests with performance thresholds
 - Containerization: Docker-ready deployment
 - CI/CD Integration: Automated 3-stage pipeline
 - Clean Architecture: Organized codebase with separation of concerns
+- Comprehensive Analytics: Storage efficiency, speed improvement, and accuracy trade-off analysis
 
-## Use Cases
+## Recommendations 
 
-This pipeline is ideal for:
-- Educational MLOps: Learning end-to-end ML pipeline development
-- Model Compression: Understanding quantization techniques
-- CI/CD Learning: Implementing automated ML workflows
-- Edge Deployment: Lightweight model deployment scenarios
-- Regression Analysis: Housing price prediction and similar domains
+Given the significant accuracy degradation observed with 8-bit quantization:
 
-## Future Enhancements
-
-- Add model versioning with MLflow
-- Implement A/B testing framework
-- Add monitoring and alerting
-- Support for other regression algorithms
-- Advanced quantization techniques (dynamic quantization)
-- Model explainability with SHAP values
+1. **Consider 16-bit quantization** for better accuracy-efficiency balance
+2. **Implement dynamic range optimization** to better preserve important coefficient values
+3. **Add quantization-aware training** to compensate for precision loss
+4. **Evaluate per-layer quantization sensitivity** for selective compression
+5. **Implement accuracy thresholds** in CI/CD pipeline to prevent deployment of degraded models
