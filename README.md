@@ -52,20 +52,20 @@ docker run --rm mlops-lr
 - Trains LinearRegression model with cross-validation
 - Evaluates performance using R² score and MSE
 - Persists trained model using joblib serialization
-- Achieves 61.26% variance explanation on training data
+- Achieves 61.26 percent variance explanation on training data
 
 ### Testing (tests/test_train.py)
 - Dataset Validation: Ensures proper data loading and preprocessing
 - Model Architecture: Validates LinearRegression instantiation
 - Training Verification: Confirms model coefficients are learned
-- Performance Gate: Enforces R² score > 0.5 quality threshold
+- Performance Gate: Enforces R² score greater than 0.5 quality threshold
 - Regression Analysis: Tests prediction capability on holdout data
 
 ### Quantization (src/quantize.py)
 - Parameter Extraction: Isolates model coefficients and intercept
 - Backup Creation: Saves original float32 parameters
-- 8-bit Conversion: Implements manual quantization to uint8
-- Validation: Tests inference accuracy with dequantized weights
+- 8-bit Conversion: Implements manual symmetric quantization to uint8
+- Validation: Tests inference accuracy with quantized weights
 - Intercept quantized along with coefficients
 
 ### Prediction (src/predict.py)
@@ -86,7 +86,7 @@ The containerized solution:
 
 Three-stage automated workflow:
 
-1. test_suite: Executes comprehensive pytest suite (quality gate)
+1. test_suite: Executes comprehensive pytest suite
 2. train_and_quantize: Trains model and applies quantization
 3. build_and_test_container: Builds Docker image and validates deployment
 
@@ -95,45 +95,45 @@ Each stage must pass before proceeding to the next, ensuring production readines
 ## Performance Analysis
 
 ### Model Performance
-| Dataset | R² Score | MSE Loss |
-|---------|----------|----------|
-| Training | 0.6126 | 0.5179 |
-| Testing | 0.5758 | 0.5559 |
+| Dataset  | R² Score | MSE Loss |
+|----------|----------|----------|
+| Training | 0.6126   | 0.5179   |
+| Testing  | 0.5758   | 0.5559   |
 
-Dataset Split: 16,512 training samples, 4,128 test samples (80/20 split)
+Dataset Split: 16512 training samples, 4128 test samples
 
 ### Quantization Performance Metrics
 
 #### Storage Efficiency
-| Metric | Value |
-|--------|-------|
+| Metric              | Value |
+|---------------------|-------|
 | Original Model Size | 72 bytes |
 | Quantized Model Size | 9 bytes |
-| Size Reduction | 87.5% |
-| Compression Ratio | 8.0:1 |
+| Size Reduction      | 87.5 percent |
+| Compression Ratio   | 8.0 to 1 |
 
 #### Quantization Accuracy
-| Metric | Value |
-|--------|-------|
-| Average Coefficient Error | 0.00033096 |
-| Intercept Error | 0.00145382 |
-| Coefficient Storage | uint8 |
-| Intercept Storage | uint8 |
+| Metric                  | Value       |
+|-------------------------|-------------|
+| Average Coefficient Error | 0.00126834 |
+| Intercept Error           | 0.00000000 |
+| Coefficient Storage       | uint8      |
+| Intercept Storage         | uint8      |
 
 #### Model Performance Impact
-| Metric | Original | Quantized | Degradation |
-|--------|----------|-----------|-------------|
-| R² Score | 0.5758 | -0.1817 | 0.7575 (131.6%) |
-| MSE | 0.5559 | 1.5485 | 0.9926 (178.6%) |
+| Metric     | Original | Quantized | Degradation |
+|------------|----------|-----------|-------------|
+| R² Score   | 0.5758   | 0.5763    | -0.0005     |
+| MSE        | 0.5559   | 0.5552    | -0.0007     |
 
 #### Inference Speed Analysis
-| Metric | Value |
-|--------|-------|
-| Original Inference Time | 0.0957 ms/sample |
-| Quantized Inference Time | 0.0083 ms/sample |
-| Speed Improvement | 91.3% |
+| Metric                  | Value        |
+|-------------------------|--------------|
+| Original Inference Time | 0.0503 ms/sample |
+| Quantized Inference Time | 0.0041 ms/sample |
+| Speed Improvement       | 91.9 percent |
 
-**Performance Note**: While quantization achieves significant storage reduction (87.5%) and inference speed improvement (91.3%), it causes substantial accuracy degradation. The R² score drops from 0.5758 to -0.1817, indicating the quantized model performs worse than a simple mean baseline. This suggests the current 8-bit quantization approach may be too aggressive for this linear regression model.
+**Performance Note**: The symmetric quantization strategy improved inference time by over 90 percent with negligible impact on accuracy. This makes it suitable for deployment where speed and size are prioritized over small gains in precision.
 
 ## Sample Predictions Analysis
 
@@ -153,11 +153,12 @@ Sample 10: Actual=4.466, Predicted=3.916
 ```
 
 ### Quantization Impact on Predictions
+
 ```
 Prediction comparison (first 3 samples):
-Sample 1: Original=0.7191, Dequantized=1.4977, Diff=0.778571
-Sample 2: Original=1.7640, Dequantized=2.6391, Diff=0.875065
-Sample 3: Original=2.7097, Dequantized=3.4567, Diff=0.747047
+Sample 1: Original=0.7191, Quantized=0.7210, Diff=0.001868, Rel.Error=0.26 percent
+Sample 2: Original=1.7640, Quantized=1.7643, Diff=0.000320, Rel.Error=0.02 percent
+Sample 3: Original=2.7097, Quantized=2.7046, Diff=0.005013, Rel.Error=0.18 percent
 ```
 
 ## Model Architecture
@@ -166,23 +167,24 @@ Sample 3: Original=2.7097, Dequantized=3.4567, Diff=0.747047
 Linear Regression Coefficients:
 Feature | Coefficient
 --------|------------
-    1   |     0.448675
-    2   |     0.009724
-    3   |    -0.123323
-    4   |     0.783145
-    5   |    -0.000002
-    6   |    -0.003526
-    7   |    -0.419792
-    8   |    -0.433708
+    1   |     0.854383
+    2   |     0.122546
+    3   |    -0.294410
+    4   |     0.339259
+    5   |    -0.002308
+    6   |    -0.040829
+    7   |    -0.896929
+    8   |    -0.869842
 
-Model Intercept: -37.023278
+Model Intercept: 2.071947
 Total Features: 8
 ```
 
 ### Quantization Range Analysis
+
 ```
-Coefficient Range: [-0.433708, 0.783145]
-Intercept Range: [-37.393510, -36.653045]
+Coefficient Range: [-0.896929, 0.854383]
+Intercept Range: [2.071947, 2.071947]
 ```
 
 ## Key Features
@@ -196,12 +198,12 @@ Intercept Range: [-37.393510, -36.653045]
 - Clean Architecture: Organized codebase with separation of concerns
 - Comprehensive Analytics: Storage efficiency, speed improvement, and accuracy trade-off analysis
 
-## Recommendations 
+## Recommendations
 
-Given the significant accuracy degradation observed with 8-bit quantization:
+Given the updated quantization strategy:
 
-1. **Consider 16-bit quantization** for better accuracy-efficiency balance
-2. **Implement dynamic range optimization** to better preserve important coefficient values
-3. **Add quantization-aware training** to compensate for precision loss
-4. **Evaluate per-layer quantization sensitivity** for selective compression
-5. **Implement accuracy thresholds** in CI/CD pipeline to prevent deployment of degraded models
+1. Retain symmetric quantization due to minimal accuracy degradation
+2. Continue to monitor accuracy bounds for production deployments
+3. Explore hybrid or adaptive quantization for further optimization
+4. Benchmark on other datasets to validate robustness
+5. Log additional stats automatically into future runs for audit and tuning
